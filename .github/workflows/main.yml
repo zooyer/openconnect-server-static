@@ -4,8 +4,8 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-      description: 'Tag for release'
-      required: true
+        description: 'Tag for release'
+        required: true
 
 jobs:
   build-container-and-deploy:
