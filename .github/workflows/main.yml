@@ -6,7 +6,6 @@ on:
 jobs:
   build-container-and-deploy:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
     steps:
       - name: Checkout from GitHub
         uses: actions/checkout@v4
