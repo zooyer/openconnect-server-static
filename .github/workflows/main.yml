@@ -49,6 +49,11 @@ jobs:
           echo "New tag: $NEW_VERSION"
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
 
+      - name: Configure Git user
+        run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Actions"
+          
       - name: Create Git Tag
         run: |
           git tag -a ${{ env.NEW_VERSION }} -m "Release version ${{ env.NEW_VERSION }}"
