@@ -2,6 +2,10 @@ name: Build container(s) & Upload Artifacts
 
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+      description: 'Tag for release'
+      required: true
 
 jobs:
   build-container-and-deploy:
@@ -21,13 +25,9 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Determine Version
         run: |
-          # Strip git ref prefix from version
-          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
-          # Strip "v" prefix from tag name
-          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
-          # when the branch is main, replace main with latest
-          [ "$VERSION" == "main" ] && VERSION=latest
+          VERSION="${{ github.event.inputs.tag }}"
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
+
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
