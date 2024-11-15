@@ -34,8 +34,11 @@ jobs:
       - name: Increment version
         id: increment_version
         run: |
-          # Extract the version numbers
-          VERSION=${{ env.LATEST_TAG#v}}  # Remove the "v" prefix
+          # Extract the version numbers and remove the "v" prefix
+          VERSION=${{ env.LATEST_TAG }}
+          VERSION=${VERSION#v}  # Remove the "v" prefix
+          
+          # Split the version string into an array
           IFS='.' read -r -a VERSION_PARTS <<< "$VERSION"
           
           # Increment the patch version (third number)
