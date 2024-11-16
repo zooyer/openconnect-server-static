@@ -45,7 +45,9 @@ apk add --no-cache \
 	zlib-static \
 	zstd-dev \
 	zstd-libs \
-	zstd-static
+	zstd-static \
+ 	arm-linux-gnueabi-gcc \
+	libc6-dev-armel-cross
 mkdir -p /usr/src
 cd /usr/src
 set -- \
