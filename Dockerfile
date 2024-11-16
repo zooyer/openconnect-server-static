@@ -15,7 +15,6 @@ COPY --link ["scratchfs", "/scratchfs"]
 RUN	<<EOF
 
 set -x
-# Disable edge repository to use stable versions
 sed -i -r 's/v\d+\.\d+/edge/g' /etc/apk/repositories
 apk update
 apk upgrade --no-interactive --latest
@@ -67,9 +66,8 @@ cd /usr/src/libseccomp
 	--prefix=/usr \
 	--disable-shared \
 	--enable-static
-# If the function in_word_set is problematic for ARMv7, keep it as '_in_word_set'
 sed -i 's/in_word_set/_in_word_set/g' src/syscalls.perf.c
-make -j`nproc` install
+make -jnproc install
 
 #
 # gnutls
@@ -99,7 +97,7 @@ CFLAGS="-Wno-analyzer-fd-leak -Wno-analyzer-null-dereference -Wno-analyzer-use-o
 	--disable-nls \
 	--disable-libdane \
 	--disable-gost
-make -j`nproc`
+make -jnproc
 make install-strip
 
 #
@@ -110,7 +108,7 @@ mkdir -p /usr/src/lz4
 tar -xf /usr/src/lz4-${LZ4_VERSION}.tar.gz -C /usr/src/lz4 --strip-components=1
 rm -f /usr/src/lz4-${LZ4_VERSION}.tar.gz
 cd /usr/src/lz4
-make -j`nproc` liblz4.a
+make -jnproc liblz4.a
 install lib/liblz4.a /usr/local/lib
 install lib/lz4*.h /usr/local/include
 
@@ -125,16 +123,17 @@ tar -xf /usr/src/ocserv-${OCSERV_VERSION}.tar.xz -C /usr/src/ocserv --strip-comp
 rm -f /usr/src/ocserv-${OCSERV_VERSION}.tar.xz /usr/src/ocserv-${OCSERV_VERSION}.tar.xz.sig
 
 #
-# Compile ocserv with no NEON or VFP
+# Compile ocserv
 #
 cd /usr/src/ocserv
-# Disabling NEON and VFP to make it compatible with ARMv7 without those hardware features
+
+# 修改点：增加 CFLAGS 和 LDFLAGS 限制架构特性
 LIBREADLINE_LIBS="-lreadline -lncurses -lnettle" \
 LIBNETTLE_LIBS="-lgmp" \
 LIBGNUTLS_LIBS="-lgnutls -lgmp -lnettle -lhogweed -lidn2 -lunistring" \
 LIBLZ4_CFLAGS="-I/usr/include" \
 LIBLZ4_LIBS="-L/usr/include -llz4" \
-CFLAGS="-Wno-type-limits -mcpu=cortex-a7 -msoft-float -fno-tree-vectorize -fomit-frame-pointer" \
+CFLAGS="-march=armv7-a -mfpu=vfp -mfloat-abi=softfp -Wno-type-limits" \
 LDFLAGS="-L/usr/local/lib -s -w -static" \
 ./configure \
 	--with-local-talloc \
@@ -148,7 +147,7 @@ LDFLAGS="-L/usr/local/lib -s -w -static" \
 	--without-radius \
 	--without-tun-tests \
 	--without-utmp
-make -j`nproc`
+make -jnproc
 make install-exec
 file /usr/local/sbin/ocserv
 
