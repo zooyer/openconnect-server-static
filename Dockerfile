@@ -4,7 +4,8 @@ FROM alpine:latest AS builder
 ENV	OCSERV_VERSION="1.3.0" \
 	GNUTLS_VERSION="3.8.6" \
 	LIBSECCOMP_VERSION="2.5.5" \
-	LZ4_VERSION="1.9.4"
+	LZ4_VERSION="1.9.4" \
+ 	CC="arm-linux-gnueabi-gcc"
 
 #
 # assets
