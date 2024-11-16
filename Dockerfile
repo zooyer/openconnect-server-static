@@ -15,6 +15,7 @@ COPY --link ["scratchfs", "/scratchfs"]
 RUN	<<EOF
 
 set -x
+# Disable edge repository to use stable versions
 sed -i -r 's/v\d+\.\d+/edge/g' /etc/apk/repositories
 apk update
 apk upgrade --no-interactive --latest
@@ -57,7 +58,6 @@ gpg --yes --list-keys --fingerprint --with-colons | sed -E -n -e 's/^fpr::::::::
 #
 # libseccomp
 #
-# Note: 'in_word_set()' in src/syscalls.perf.c conflicts with ocserv exports, rename it to '_in_word_set()'
 curl --location --silent --output /usr/src/libseccomp-${LIBSECCOMP_VERSION}.tar.gz "https://github.com/seccomp/libseccomp/releases/download/v${LIBSECCOMP_VERSION}/libseccomp-${LIBSECCOMP_VERSION}.tar.gz"
 mkdir -p /usr/src/libseccomp
 tar -xf /usr/src/libseccomp-${LIBSECCOMP_VERSION}.tar.gz -C /usr/src/libseccomp --strip-components=1
@@ -67,6 +67,7 @@ cd /usr/src/libseccomp
 	--prefix=/usr \
 	--disable-shared \
 	--enable-static
+# If the function in_word_set is problematic for ARMv7, keep it as '_in_word_set'
 sed -i 's/in_word_set/_in_word_set/g' src/syscalls.perf.c
 make -j`nproc` install
 
@@ -124,15 +125,16 @@ tar -xf /usr/src/ocserv-${OCSERV_VERSION}.tar.xz -C /usr/src/ocserv --strip-comp
 rm -f /usr/src/ocserv-${OCSERV_VERSION}.tar.xz /usr/src/ocserv-${OCSERV_VERSION}.tar.xz.sig
 
 #
-# Compile ocserv
+# Compile ocserv with no NEON or VFP
 #
 cd /usr/src/ocserv
+# Disabling NEON and VFP to make it compatible with ARMv7 without those hardware features
 LIBREADLINE_LIBS="-lreadline -lncurses -lnettle" \
 LIBNETTLE_LIBS="-lgmp" \
 LIBGNUTLS_LIBS="-lgnutls -lgmp -lnettle -lhogweed -lidn2 -lunistring" \
 LIBLZ4_CFLAGS="-I/usr/include" \
 LIBLZ4_LIBS="-L/usr/include -llz4" \
-CFLAGS="-Wno-type-limits" \
+CFLAGS="-Wno-type-limits -mcpu=cortex-a7 -msoft-float -fno-tree-vectorize -fomit-frame-pointer" \
 LDFLAGS="-L/usr/local/lib -s -w -static" \
 ./configure \
 	--with-local-talloc \
