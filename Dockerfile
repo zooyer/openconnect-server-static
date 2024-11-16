@@ -57,6 +57,7 @@ gpg --yes --list-keys --fingerprint --with-colons | sed -E -n -e 's/^fpr::::::::
 #
 # libseccomp
 #
+# Note: 'in_word_set()' in src/syscalls.perf.c conflicts with ocserv exports, rename it to '_in_word_set()'
 curl --location --silent --output /usr/src/libseccomp-${LIBSECCOMP_VERSION}.tar.gz "https://github.com/seccomp/libseccomp/releases/download/v${LIBSECCOMP_VERSION}/libseccomp-${LIBSECCOMP_VERSION}.tar.gz"
 mkdir -p /usr/src/libseccomp
 tar -xf /usr/src/libseccomp-${LIBSECCOMP_VERSION}.tar.gz -C /usr/src/libseccomp --strip-components=1
@@ -67,7 +68,7 @@ cd /usr/src/libseccomp
 	--disable-shared \
 	--enable-static
 sed -i 's/in_word_set/_in_word_set/g' src/syscalls.perf.c
-make -jnproc install
+make -j`nproc` install
 
 #
 # gnutls
@@ -80,7 +81,7 @@ tar -xf /usr/src/gnutls-${GNUTLS_VERSION}.tar.xz -C /usr/src/gnutls --strip-comp
 rm -f /usr/src/gnutls-${GNUTLS_VERSION}.tar.xz /usr/src/gnutls-${GNUTLS_VERSION}.tar.xz.sig
 cd /usr/src/gnutls
 unbound-anchor -a "/etc/unbound/root.key" ; true
-CFLAGS="-Wno-analyzer-fd-leak -Wno-analyzer-null-dereference -Wno-analyzer-use-of-uninitialized-value -Wno-type-limits -Wno-unused-macros -Wno-stringop-overflow" \
+CFLAGS="-Wno-analyzer-fd-leak -Wno-analyzer-null-dereference -Wno-analyzer-use-of-uninitialized-value -Wno-type-limits -Wno-unused-macros -Wno-stringop-overflow -march=armv7-a -mtune=cortex-a9 -mfpu=vfp" \
 ./configure \
 	--prefix=/usr \
 	--enable-static=yes \
@@ -97,7 +98,7 @@ CFLAGS="-Wno-analyzer-fd-leak -Wno-analyzer-null-dereference -Wno-analyzer-use-o
 	--disable-nls \
 	--disable-libdane \
 	--disable-gost
-make -jnproc
+make -j`nproc`
 make install-strip
 
 #
@@ -108,7 +109,7 @@ mkdir -p /usr/src/lz4
 tar -xf /usr/src/lz4-${LZ4_VERSION}.tar.gz -C /usr/src/lz4 --strip-components=1
 rm -f /usr/src/lz4-${LZ4_VERSION}.tar.gz
 cd /usr/src/lz4
-make -jnproc liblz4.a
+make -j`nproc` liblz4.a
 install lib/liblz4.a /usr/local/lib
 install lib/lz4*.h /usr/local/include
 
@@ -126,15 +127,13 @@ rm -f /usr/src/ocserv-${OCSERV_VERSION}.tar.xz /usr/src/ocserv-${OCSERV_VERSION}
 # Compile ocserv
 #
 cd /usr/src/ocserv
-
-# 修改点：增加 CFLAGS 和 LDFLAGS 限制架构特性
 LIBREADLINE_LIBS="-lreadline -lncurses -lnettle" \
 LIBNETTLE_LIBS="-lgmp" \
 LIBGNUTLS_LIBS="-lgnutls -lgmp -lnettle -lhogweed -lidn2 -lunistring" \
 LIBLZ4_CFLAGS="-I/usr/include" \
 LIBLZ4_LIBS="-L/usr/include -llz4" \
-CFLAGS="-march=armv7-a -mfpu=vfp -mfloat-abi=softfp -Wno-type-limits" \
-LDFLAGS="-L/usr/local/lib -s -w -static" \
+CFLAGS="-Wno-type-limits -march=armv7-a -mtune=cortex-a9 -mfpu=vfp" \
+LDFLAGS="-L/usr/local/lib -s -w -static -march=armv7-a -mtune=cortex-a9 -mfpu=vfp" \
 ./configure \
 	--with-local-talloc \
 	--with-pager="" \
@@ -147,7 +146,7 @@ LDFLAGS="-L/usr/local/lib -s -w -static" \
 	--without-radius \
 	--without-tun-tests \
 	--without-utmp
-make -jnproc
+make -j`nproc`
 make install-exec
 file /usr/local/sbin/ocserv
 
