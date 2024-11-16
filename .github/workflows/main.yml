@@ -44,6 +44,17 @@ jobs:
         run: |
           ./extract-artifacts.sh ghcr.io/${{ github.repository }}
 
+      # 确保 Tag 存在于远程仓库
+      - name: Ensure Tag Exists
+        run: |
+          if ! git rev-parse ${{ env.VERSION }} >/dev/null 2>&1; then
+            echo "Creating tag ${{ env.VERSION }}..."
+            git tag ${{ env.VERSION }}
+            git push origin ${{ env.VERSION }}
+          else
+            echo "Tag ${{ env.VERSION }} already exists."
+          fi
+
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
