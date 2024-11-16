@@ -81,7 +81,7 @@ tar -xf /usr/src/gnutls-${GNUTLS_VERSION}.tar.xz -C /usr/src/gnutls --strip-comp
 rm -f /usr/src/gnutls-${GNUTLS_VERSION}.tar.xz /usr/src/gnutls-${GNUTLS_VERSION}.tar.xz.sig
 cd /usr/src/gnutls
 unbound-anchor -a "/etc/unbound/root.key" ; true
-CFLAGS="-Wno-analyzer-fd-leak -Wno-analyzer-null-dereference -Wno-analyzer-use-of-uninitialized-value -Wno-type-limits -Wno-unused-macros -Wno-stringop-overflow -march=armv5te -mfloat-abi=soft" \
+CFLAGS="-Wno-analyzer-fd-leak -Wno-analyzer-null-dereference -Wno-analyzer-use-of-uninitialized-value -Wno-type-limits -Wno-unused-macros -Wno-stringop-overflow -march=armv7-a -mtune=cortex-a9" \
 ./configure \
 	--prefix=/usr \
 	--enable-static=yes \
@@ -132,8 +132,8 @@ LIBNETTLE_LIBS="-lgmp" \
 LIBGNUTLS_LIBS="-lgnutls -lgmp -lnettle -lhogweed -lidn2 -lunistring" \
 LIBLZ4_CFLAGS="-I/usr/include" \
 LIBLZ4_LIBS="-L/usr/include -llz4" \
-CFLAGS="-Wno-type-limits -march=armv5te -mfloat-abi=soft" \
-LDFLAGS="-L/usr/local/lib -s -w -static -march=armv5te -mfloat-abi=soft" \
+CFLAGS="-Wno-type-limits -march=armv7-a -mtune=cortex-a9" \
+LDFLAGS="-L/usr/local/lib -s -w -static -march=armv7-a -mtune=cortex-a9" \
 ./configure \
 	--with-local-talloc \
 	--with-pager="" \
